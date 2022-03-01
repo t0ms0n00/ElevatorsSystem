@@ -15,7 +15,7 @@ public class SimulationScreen {
     JFrame settingsScreen, simulationScreen;
     int elevatorsNumber, floorsNumber;
     ElevatorSystem elevatorSystem;
-    JPanel[][] doors;
+    Door[][] doors;
     JPanel[] buttons;
 
     public SimulationScreen(){
@@ -49,23 +49,22 @@ public class SimulationScreen {
 
         JButton sumbitButton = new JButton("Submit");
         sumbitButton.setBounds(200, 300, 200, 50);
-        sumbitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                elevatorsNumber = Integer.parseInt(inputElevatorsNumber.getText());
-                floorsNumber = Integer.parseInt(inputFloorsNumber.getText());
-                startSimulation();
-            }
+        sumbitButton.addActionListener(e -> {
+            elevatorsNumber = Integer.parseInt(inputElevatorsNumber.getText());
+            floorsNumber = Integer.parseInt(inputFloorsNumber.getText());
+            startSimulation();
         });
         settingsScreen.add(sumbitButton);
     }
 
     public void startSimulation(){
-        elevatorSystem = new ElevatorSystem(elevatorsNumber, floorsNumber);
-        doors = new JPanel[elevatorsNumber][floorsNumber];
-        buttons = new JPanel[floorsNumber];
         settingsScreen.setVisible(false);
         settingsScreen.dispose();
+
+        elevatorSystem = new ElevatorSystem(elevatorsNumber, floorsNumber);
+        doors = new Door[elevatorsNumber][floorsNumber];
+        buttons = new JPanel[floorsNumber];
+
         simulationScreen = new JFrame();
         simulationScreen.setSize(elevatorsNumber*100 + 100 + 100, floorsNumber * 50 + 150);
         simulationScreen.setVisible(true);
@@ -99,28 +98,20 @@ public class SimulationScreen {
             public void mouseExited(MouseEvent e) {}
         });
 
-        for(int f = 0; f < floorsNumber; f++){
+        for(int f = 0; f < floorsNumber; f++){  /// buttons and doors
             for(int e = 0; e < elevatorsNumber; e++) {
-                doors[e][f] = new JPanel();     /// grid element
-                doors[e][f].setBounds(e*100 + 50, (floorsNumber-f)*50-40, 90, 40);
-                doors[e][f].add(new JLabel(""));
-                simulationScreen.add(doors[e][f]);
+                doors[e][f] = new Door(e,f,floorsNumber);     /// grid element
+                simulationScreen.add(doors[e][f].get());
             }
-            buttons[f] = new JPanel(); /// button column
-            buttons[f].setBounds(elevatorsNumber*100 + 100, (floorsNumber-f)*50-40, 50, 40);
-            buttons[f].setBackground(Color.red);
-            buttons[f].add(new JLabel(""));
+            buttons[f] = new ElevatorButton(f, elevatorsNumber, floorsNumber); /// button column
             simulationScreen.add(buttons[f]);
         }
 
         JButton stepButton = new JButton("Make step");
         stepButton.setBounds(simulationScreen.getWidth()/2 - 100, simulationScreen.getHeight() - 100, 200, 50);
-        stepButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                elevatorSystem.step();
-                drawState();
-            }
+        stepButton.addActionListener(e -> {
+            elevatorSystem.step();
+            drawState();
         });
         simulationScreen.add(stepButton);
 
@@ -130,10 +121,7 @@ public class SimulationScreen {
     private void drawState(){
         for(int f = 0; f < floorsNumber; f++){
             for(int e = 0; e < elevatorsNumber; e++){
-                doors[e][f].setBackground(Color.gray);
-                doors[e][f].setBorder(new LineBorder(Color.black));
-                JLabel label = (JLabel)doors[e][f].getComponent(0);
-                label.setText("");
+                doors[e][f].resetDoorStyle();
             }
             JLabel label = (JLabel)buttons[f].getComponent(0);
             label.setText("");
@@ -144,29 +132,19 @@ public class SimulationScreen {
     private void updateState(){
         Triple[] updates = elevatorSystem.status();
         for(Triple update: updates){
-            updateDoor(update.getElevatorId(), update.getActualFloor(), Color.red);
-            updateDoor(update.getElevatorId(), update.getTargetFloor(), Color.green, "TARGET");
-            if(update.getActualFloor() == update.getTargetFloor()) openDoor(update.getElevatorId(), update.getActualFloor());
+            int elevatorID = update.getElevatorId();
+            int actualFloor = update.getActualFloor();
+            int targetFloor = update.getTargetFloor();
+            doors[elevatorID][actualFloor].updateDoor(Color.red);
+            doors[elevatorID][targetFloor].updateDoor(Color.green, "TARGET");
+            if(actualFloor == targetFloor)
+                doors[elevatorID][targetFloor].openDoor();
         }
-    }
-
-    private void updateDoor(int elevatorNumber, int floor, Color color){
-        doors[elevatorNumber][floor].setBackground(color);
-    }
-
-    private void updateDoor(int elevatorNumber, int floor, Color color, String text){
-        doors[elevatorNumber][floor].setBackground(color);
-        JLabel label = (JLabel)doors[elevatorNumber][floor].getComponent(0);
-        label.setText(text);
     }
 
     private void updateButton(int floor, String text){
         JLabel label = (JLabel)buttons[floor].getComponent(0);
         label.setText(text);
     }
-
-    private void openDoor(int elevatorNumber, int floor){
-        JLabel label = (JLabel)doors[elevatorNumber][floor].getComponent(0);
-        label.setText("OPEN");
-    }
+    
 }
