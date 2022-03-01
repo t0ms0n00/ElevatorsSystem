@@ -6,7 +6,7 @@ import java.awt.*;
 
 public class Door{
 
-    JPanel style;
+    private JPanel style;
 
     public Door(int elevator, int floor, int floorsNumber){
         style = new JPanel();

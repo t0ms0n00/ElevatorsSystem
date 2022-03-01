@@ -4,10 +4,7 @@ import ElevatorSystem.ElevatorSystem;
 import Tuples.Triple;
 
 import javax.swing.*;
-import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
@@ -16,7 +13,7 @@ public class SimulationScreen {
     int elevatorsNumber, floorsNumber;
     ElevatorSystem elevatorSystem;
     Door[][] doors;
-    JPanel[] buttons;
+    ElevatorButton[] buttons;
 
     public SimulationScreen(){
         settingsScreen = new JFrame();
@@ -63,7 +60,7 @@ public class SimulationScreen {
 
         elevatorSystem = new ElevatorSystem(elevatorsNumber, floorsNumber);
         doors = new Door[elevatorsNumber][floorsNumber];
-        buttons = new JPanel[floorsNumber];
+        buttons = new ElevatorButton[floorsNumber];
 
         simulationScreen = new JFrame();
         simulationScreen.setSize(elevatorsNumber*100 + 100 + 100, floorsNumber * 50 + 150);
@@ -76,11 +73,11 @@ public class SimulationScreen {
                 if(e.getX() > elevatorsNumber * 100 + 110  && e.getX() < elevatorsNumber * 100 + 160){
                     int floor = floorsNumber - (e.getY())/50;
                     if(SwingUtilities.isLeftMouseButton(e)){
-                        updateButton(floor, "UP");
+                        buttons[floor].updateButton("UP");
                         elevatorSystem.pickup(floor, 1);
                     }
                     else if(SwingUtilities.isRightMouseButton(e)){
-                        updateButton(floor, "DOWN");
+                        buttons[floor].updateButton("DOWN");
                         elevatorSystem.pickup(floor, -1);
                     }
                 }
@@ -104,7 +101,7 @@ public class SimulationScreen {
                 simulationScreen.add(doors[e][f].get());
             }
             buttons[f] = new ElevatorButton(f, elevatorsNumber, floorsNumber); /// button column
-            simulationScreen.add(buttons[f]);
+            simulationScreen.add(buttons[f].get());
         }
 
         JButton stepButton = new JButton("Make step");
@@ -123,8 +120,7 @@ public class SimulationScreen {
             for(int e = 0; e < elevatorsNumber; e++){
                 doors[e][f].resetDoorStyle();
             }
-            JLabel label = (JLabel)buttons[f].getComponent(0);
-            label.setText("");
+            buttons[f].resetButtonLabel();
         }
         this.updateState();
     }
@@ -142,9 +138,4 @@ public class SimulationScreen {
         }
     }
 
-    private void updateButton(int floor, String text){
-        JLabel label = (JLabel)buttons[floor].getComponent(0);
-        label.setText(text);
-    }
-    
 }
