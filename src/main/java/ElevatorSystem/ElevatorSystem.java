@@ -24,6 +24,10 @@ public class ElevatorSystem {
         int minDistance = floorsNumber + 1;
         for(int i=0; i<elevatorsNumber; i++){
             Elevator elevator = elevators[i];
+            if(elevator.getPosition() == requestFloorNumber){
+                /// elevator is on that floor so request moving up/down to it is untypical, arbitrally skip
+                continue;
+            }
             if(elevator.getPosition() > requestFloorNumber && direction == 1){
                 /// request is unreachable - elevator is above goal, and to goal we need move up
                 continue;
@@ -33,18 +37,24 @@ public class ElevatorSystem {
                 continue;
             }
             int elevatorDistance = Math.abs(elevator.getPosition()-requestFloorNumber); // distance between actual position and requested target
+            if(elevator.getDirection() == -1 * direction){
+                /// elevator has a task in opposite direction, so we add a way to actual task twice (go and return),
+                // to favour elevators with the same direction as request's because time is shorter
+                elevatorDistance += 2 * Math.abs(elevator.getTarget()-elevator.getPosition());
+            }
             if(elevatorDistance < minDistance) {
                 minDistance = elevatorDistance;
                 elevatorID = i;
             }
         }
         if(elevatorID != -1){
+            /// request cannot be handled
             this.elevators[elevatorID].makeRequest(new DoubleTuple(requestFloorNumber, direction));
         }
-        else{
+        /*else{
             /// request can't be catched by any of elevators
             System.out.println("Request is unreachable, please try to fix parameters");
-        }
+        }*/
 
     }
 
